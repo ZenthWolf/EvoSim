@@ -6,7 +6,7 @@ Current operation:
     1. Biome generates a set amount of food each generation.
     2. Beasts roam for up to 2 food - seek nearest food
     3. After all food is eaten, or a beast eats 2 food, they return to the border to "shelter"
-    4. Any beast that fails to eat at least 1 food or fails to reach shelter (the border) dies.
+    4. Any beast that fails to eat at least 1 food or fails to reach shelter (the border) in time dies.
     5. Each beast that eats 2 food adds a new beast to the next generation.
     
 Completed tasks:
@@ -19,7 +19,7 @@ Current priority:
     - (mid term)   Allow for more interesting plant populations (food sources)
     - (long term)  Real time visualization of a generation
     - (long term)  Simulation controls while running
-        - print statistics
+        - print statistics on demand
         - speed up/skip live visualization
         - manual injection of mutations or environmental changes
 
