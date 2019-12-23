@@ -10,6 +10,7 @@ Simple Evolution Simulator in Python
 #--- DEPENDANCIES ------------------------------------------------------------+
 
 from Ecology import *
+import pygame
 
 #--- CONSTANTS ---------------------------------------------------------------+
 
@@ -106,8 +107,24 @@ def run(settings, biome):
 
 
 #--- RUN ----------------------------------------------------------------------+
+pygame.init()
+screen = pygame.display.set_mode((800,600))
+pygame.display.set_caption("Ecosim")
 
 biome = Biome(settings);
 run(settings, biome)
+
+
+waiting = True
+print("Press enter to end")
+while waiting:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            waiting = False
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_RETURN:
+                pygame.quit()
+                waiting = False
 
 #--- END ----------------------------------------------------------------------+

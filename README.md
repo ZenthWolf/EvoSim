@@ -9,6 +9,10 @@ Current operation:
     4. Any beast that fails to eat at least 1 food or fails to reach shelter (the border) in time dies.
     5. Each beast that eats 2 food adds a new beast to the next generation.
     
+    Current output:
+    1. Text output of some information
+    2. Inoperoble pygame window for future visualization
+    
 Completed tasks:
     - Basic population growth
     

@@ -192,9 +192,6 @@ def simulate_plants(settings, biome, plants, gen):
             else:
                 plant.grow(settings)
 
-
-
-    
     return plants
 
     
