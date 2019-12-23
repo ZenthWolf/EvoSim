@@ -9,8 +9,11 @@ Simple Evolution Simulator in Python
 """
 #--- DEPENDANCIES ------------------------------------------------------------+
 
-from Ecology import *
 import pygame
+pygame.init()
+screen = pygame.display.set_mode((800,600))
+pygame.display.set_caption("Ecosim")
+from Ecology import *
 
 #--- CONSTANTS ---------------------------------------------------------------+
 
@@ -83,7 +86,7 @@ def run(settings, biome):
         print("Starting beasts : " + str( len(beasts) ) + "\n")
         print("-----------------------------------------------------------")
         # SIMULATE
-        beasts = simulate_beasts(settings, biome, beasts, foods, gen)
+        beasts = simulate_beasts(settings, screen, biome, beasts, foods, gen)
 
         # EVOLVE
         beasts = newgen(settings, beasts)
@@ -117,6 +120,11 @@ run(settings, biome)
 
 waiting = True
 print("Press enter to end")
+
+#pygame.draw.circle(screen, (255,255,255), (400,300),50,100)
+#pygame.display.update()
+#circle(surface, color, center, radius) -> Rect
+#circle(surface, color, center, radius, width=0) -> Rect
 while waiting:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:

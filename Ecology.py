@@ -10,6 +10,8 @@ Simple Evolution Simulator in Python
 
 #--- Depencies ---------------------------------------------------------------+
 
+import pygame
+
 from random import randint
 from random import uniform
 
@@ -21,7 +23,6 @@ from math import sin
 from math import cos
 from math import acos
 from math import atan2
-
 
 #--- FUNCTIONS ---------------------------------------------------------------+
 
@@ -67,7 +68,7 @@ def start_border_y(settings, border):
         return 100000   # until better exception handling        
 
 
-def simulate_beasts(settings, biome, beasts, foods, gen):
+def simulate_beasts(settings, screen, biome, beasts, foods, gen):
 
     total_time_steps = int(settings['gen_time'] / settings['dt'])
 
@@ -131,6 +132,12 @@ def simulate_beasts(settings, biome, beasts, foods, gen):
         for beast in beasts:
             beast.update_vel(settings)
             beast.update_pos(settings)
+        
+        # DRAW SCREEN
+        screen.fill((0,0,0))
+        for food in foods:
+            food.Draw(screen)
+        pygame.display.update()
 
     #CHECK FOR FAILED TO SHELTER:
     for beast in beasts:
@@ -227,6 +234,16 @@ class Food():
         self.x = uniform(settings['x_min'], settings['x_max'])
         self.y = uniform(settings['y_min'], settings['y_max'])
         self.energy = 1
+        
+        self.color = (50,255,50)
+    
+    def ScreenX(self):
+        return int((self.x + 2)*500/(4) + 10)
+    def ScreenY(self):
+        return int((self.y + 2)*500/(4) + 10)
+    
+    def Draw(self, screen):
+        pygame.draw.circle(screen, self.color, (self.ScreenX(), self.ScreenY()), 10)
         
 class Beast():
     def __init__(self, settings):
