@@ -52,4 +52,17 @@ For self:
    
 3D Plottingg in python
    - These plots are for graphs only, visualization is to be 2D
-   
+
+
+Acknowledgements:
+
+    - Code inspiration from Nathan Rooy's 'evolving-simple-organisms' repository
+        - GitHub: https://github.com/nathanrooy/evolving-simple-organisms
+        - Usage: Began by tearing apart code to bare bones, basic functions and classes were reduced to the simplest case for inspiration
+        - Divergences: removed neural net, starting with different survival rules, plan to implement multiple organisms
+        
+    - Alternative set ups inspire by primer (on youtube)/Justin Helps (github)
+        - Github: https://github.com/Helpsypoo/primer
+        - Youtube: https://www.youtube.com/channel/UCKzJFdi57J53Vr_BkTfN3uQ
+        - No code referenced, but background discussion may inform different versions
+        - Less natural starting condition for animals (at boundary) example of inspiration taken
