@@ -24,7 +24,8 @@ screen = pygame.display.set_mode(graphic_settings['screen_size'])
 pygame.display.set_caption(graphic_settings['window_title'])
 from Ecology import *
 
-#--- Ecology Parameters ------------------------------------------------------+
+#--- Ecology Parameters ------------------------------------------------------+ts : 50
+
 
 #Put this in text file?
 settings = {}
@@ -45,7 +46,7 @@ settings['food_num'] = 50       # number of food particles (for beast sim)
 settings['gens'] = 10           # number of generations
 
 # SIMULATION SETTINGS
-settings['gen_time'] = 30       # generation length         (seconds)
+settings['gen_time'] = 10       # generation length         (seconds)
 settings['dt'] = 0.04           # simulation time step      (dt)
 
 # BEAST PARAMETERS

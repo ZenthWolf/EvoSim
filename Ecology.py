@@ -142,7 +142,13 @@ def simulate_beasts(settings, screen, biome, beasts, foods, gen):
         screen.fill((0,0,0))
         for food in foods:
             food.Draw(screen)
+        for beast in beasts:
+            beast.Draw(screen)
         pygame.display.update()
+        pygame.time.delay(int(settings['dt']*1000))
+        for event in pygame.event.get():
+            pass
+
 
     #CHECK FOR FAILED TO SHELTER:
     for beast in beasts:
@@ -264,6 +270,12 @@ class Beast():
         self.d_targ = 100   # distance to nearest food/shelter
         self.r_targ = 0     # orientation to nearest food/shelter (degrees)
         self.eats = 0       # food eaten this generation
+        self.color = (255,155,50)
+        
+    def ScreenX(self):
+        return int((self.x + 2)*500/(4) + 10)
+    def ScreenY(self):
+        return int((self.y + 2)*500/(4) + 10)
     
     # UPDATE VELOCITY
     def update_vel(self, settings):
@@ -277,6 +289,9 @@ class Beast():
         dy = self.v * sin(radians(self.r_targ)) * settings['dt']
         self.x += dx
         self.y -= dy
+    
+    def Draw(self, screen):
+        pygame.draw.circle(screen, self.color, (self.ScreenX(), self.ScreenY()), 3)
     
 class Plant():
     def __init__(self, settings):
