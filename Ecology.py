@@ -76,41 +76,47 @@ def simulate_beasts(settings, screen, biome, beasts, foods, gen):
 
     #--- CYCLE THROUGH EACH TIME STEP ---------------------+
     for t_step in range(0, total_time_steps, 1):
-
-        # CHECK FOR GOALS
+        # ASSUME THIS IS LAST STEP UNTIL PROVEN OTHERWISE
+        complete = True
+        
         for beast in beasts:
-            if beast.eats < 2 and biome.food_left > 0:
-                for food in foods:
-                    food_dist = dist(beast.x, beast.y, food.x, food.y)
+            # IF NOT SHELTERING, CONTINUE SIMULATION
+            if complete and not beast.sheltering:
+                complete = False
 
-                    # UPDATE FOOD
-                    if food_dist <= 0.075:
-                        beast.eats += food.energy
-                        del foods[foods.index(food)]
-                        biome.food_left -= 1
-
-                    # RESET DISTANCE AND HEADING TO NEXT TARGET
-                    beast.d_targ = 100
-                    beast.r_targ = 0
-
-        # CALCULATE HEADING TO NEAREST GOAL
-        for beast in beasts:
-            # IF FEEDING
+           # IF EATING
             if beast.eats < 2 and biome.food_left > 0:
                 for food in foods:
 
                     # CALCULATE DISTANCE TO SELECTED FOOD PARTICLE
                     food_dist = dist(beast.x, beast.y, food.x, food.y)
+                    
+                    # EAT IF CLOSE
+                    if food_dist <= 0.075:
+                        beast.eats += food.energy
+                        del foods[foods.index(food)]
+                        biome.food_left -= 1
+                    # RESET DISTANCE AND HEADING TO NEXT TARGET
+                    beast.d_targ = 100
+                    beast.r_targ = 0
 
+            # IF SEEKING FOOD
+            if beast.eats < 2 and biome.food_left > 0:
+                for food in foods:
+
+                    # CALCULATE DISTANCE TO SELECTED FOOD PARTICLE
+                    food_dist = dist(beast.x, beast.y, food.x, food.y)
+                    
                     # DETERMINE IF THIS IS CLOSER THAN CURRENT TARGET
                     if food_dist < beast.d_targ:
                         beast.d_targ = food_dist
                         beast.r_targ = orientation(beast.x, beast.y, food.x, food.y)
+
             # IF DYING
             elif beast.eats == 0 and biome.food_left == 0:
                 del beasts[beasts.index(beast)]
-            # IF SHELTERING
-            else:
+            # SEEK SHELTER
+            elif not beast.sheltering:
                 shelter = []
                 # Distance to each border
                 shelter.append(biome.x_max - beast.x)
@@ -118,10 +124,13 @@ def simulate_beasts(settings, screen, biome, beasts, foods, gen):
                 shelter.append(biome.y_max - beast.y)
                 shelter.append(beast.y - biome.y_min)
                 
-                
                 shelter_choice = shelter.index(min(shelter))
                 
                 beast.d_targ = shelter[shelter_choice]
+                if beast.d_targ == 0.0:
+                    beast.sheltering = True
+                    beast.v = 0
+                
                 if shelter_choice == 0:
                     beast.r_targ = 0
                 elif shelter_choice == 1:
@@ -148,6 +157,10 @@ def simulate_beasts(settings, screen, biome, beasts, foods, gen):
         pygame.time.delay(int(settings['dt']*1000))
         for event in pygame.event.get():
             pass
+        
+        #END IF ALL BEASTS SHELTERED
+        if complete:
+            break
 
 
     #CHECK FOR FAILED TO SHELTER:
@@ -214,13 +227,17 @@ def simulate_plants(settings, biome, plants, gen):
 
     
 def newgen(settings, beasts):
+    print("len(beasts): " + str(len(beasts)))
     for beast in beasts:
+        print("beast.eats: " + str(beast.eats))
         if beast.eats >= 2:
+            print("A new pup!")
             beasts.append(Beast(settings))
         
         beast.d_targ = 100   # distance to nearest food/shelter
         beast.r_targ = 0     # orientation to nearest food/shelter (degrees)
         beast.eats = 0       # food eaten this generation
+        beast.sheltering = False # Going out into the world again
 
     return beasts
     
@@ -266,6 +283,8 @@ class Beast():
 
         self.v = settings['v_max']
         self.v_max = settings['v_max']
+        
+        self.sheltering = False
 
         self.d_targ = 100   # distance to nearest food/shelter
         self.r_targ = 0     # orientation to nearest food/shelter (degrees)
