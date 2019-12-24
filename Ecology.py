@@ -249,53 +249,67 @@ def newseason(settings, biome):
 #--- CLASSES -----------------------------------------------------------------+
 
 class Biome:
-
     def __init__(self, settings):
-        self.food_left = settings['food_num']  # food remaining
+        # BORDER
         self.x_min = settings['x_min']         # west border
         self.x_max = settings['x_max']         # east border
         self.y_min = settings['y_min']         # south border
         self.y_max = settings['y_max']         # north border
+        
+        # RESOURCES
+        self.food_left = settings['food_num']  # food remaining
 
 class Food():
     def __init__(self, settings):
+        # POSITION
         self.x = uniform(settings['x_min'], settings['x_max'])
         self.y = uniform(settings['y_min'], settings['y_max'])
+        
+        # VALUE
         self.energy = 1
         
+        # GRAPHICS
         self.color = (50,255,50)
+        self.size = 3
     
+    # SCREEN MAPPING FUNCTIONS
     def ScreenX(self):
         return int((self.x + 2)*500/(4) + 10)
     def ScreenY(self):
         return int((self.y + 2)*500/(4) + 10)
     
+    # DRAWING
     def Draw(self, screen):
-        pygame.draw.circle(screen, self.color, (self.ScreenX(), self.ScreenY()), 3)
+        pygame.draw.circle(screen, self.color, (self.ScreenX(), self.ScreenY()), self.size)
         
 class Beast():
     def __init__(self, settings):
-
+        # POSITION AND MOVEMENT
         start = randint(0,3)
-        
         self.x = start_border_x(settings, start)       # position (x)
         self.y = start_border_y(settings, start)       # position (y)
-
         self.v = settings['v_max']
         self.v_max = settings['v_max']
         
-        self.sheltering = False
+        # COUNTERS AND FLAGS
+        self.eats = 0              # food eaten this generation
+        self.sheltering = False    # beast is finished this generation
 
+        # GOAL TARGETTING
         self.d_targ = 100   # distance to nearest food/shelter
         self.r_targ = 0     # orientation to nearest food/shelter (degrees)
-        self.eats = 0       # food eaten this generation
+
+        # GRAPHICS
         self.color = (255,155,50)
+        self.size = 3
         
+    # SCREEN MAPPING FUNCTIONS    
     def ScreenX(self):
         return int((self.x + 2)*500/(4) + 10)
     def ScreenY(self):
         return int((self.y + 2)*500/(4) + 10)
     
+    ## ACTIONS
     # UPDATE VELOCITY
     def update_vel(self, settings):
         small_step_speed = self.d_targ/settings['dt'] # speed to take one step to target
@@ -309,21 +323,25 @@ class Beast():
         self.x += dx
         self.y -= dy
     
+    # DRAWING
     def Draw(self, screen):
-        pygame.draw.circle(screen, self.color, (self.ScreenX(), self.ScreenY()), 3)
+        pygame.draw.circle(screen, self.color, (self.ScreenX(), self.ScreenY()), self.size)
     
 class Plant():
     def __init__(self, settings):
+        # POSITION
         self.x = uniform(settings['x_min'], settings['x_max'])
         self.y = uniform(settings['y_min'], settings['y_max'])
         
+        # COUNTERS AND FLAGS
         self.energy = 0
         self.nutrients = 0
         
+        # RIVAL LISTS
         self.sunRivals = []
         self.rootRivals = []
         
-        # ABOVE GROUND
+        # ABOVE GROUND STATS
         self.height = 0
         self.height_max = 10
         self.width = 0
@@ -336,27 +354,30 @@ class Plant():
         self.rootWidth_max = 0.5
         self.rootSize = 0
         self.rootSize_max = 1
+
+         ##########################################
+        #        ENTERING THE EYE PAIN ZONE        #
+         ##########################################
         
+        ## ENERGY/NUTRIENT REQUIREMENT CALCULATION
+        # ENERGY
         def stemEnergy_need(self, settings):
             return self.height * settings['stem_height_cost'] + (self.width ** 2) * settings['stem_width_cost'] + (self.leaves ** 1.5) * settings['stem_leaf_cost']
-        
         def rootEnergy_need(self, settings):
             return (self.rootWidth ** 2) * settings['root_width_cost'] + (self.rootSize ** 1.5) * settings['root_size_cost']
-        
         def energy_need(self, settings):
             return stemEnergy_need(settings) + rootEnergy_need(settings)
-        
-        
+
+        # NUTRIENTS
         def stemNutrient_need(self, settings):
             return self.height * settings['stem_height_nutrient'] + (self.width ** 2) * settings['stem_width_nutrient'] + (self.leaves ** 1.5) * settings['stem_leaf_nutrient']
-            
         def rootNutrient_need(self, settings):
             return (self.rootWidth ** 2) * settings['root_width_nutrient'] + (self.rootSize ** 1.5) * settings['root_size_nutrient']
-        
         def nutrient_need(self, settings):            
             return stemNutrient_need(settings) + rootNutrient_need(settings)
         
-        
+        #GROW CALCULATION
+        #### WHAT DA FU--
         def grow(self, settings):
             # Energy costs for growing are increased, nutrient costs are flat
             self.energy = self.energy*settings['growth_efficiency']
