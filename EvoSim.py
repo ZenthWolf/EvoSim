@@ -10,22 +10,31 @@ Simple Evolution Simulator in Python
 #--- DEPENDANCIES ------------------------------------------------------------+
 
 import pygame
+
+
+#--- Graphics Parameters -----------------------------------------------------+
+graphic_settings = {}
+
+graphic_settings['screen_size'] = (1024, 768)
+graphic_settings['window_title'] = "Ecosim"
+
+#--- Init Screen -------------------------------------------------------------+
 pygame.init()
-screen = pygame.display.set_mode((800,600))
-pygame.display.set_caption("Ecosim")
+screen = pygame.display.set_mode(graphic_settings['screen_size'])
+pygame.display.set_caption(graphic_settings['window_title'])
 from Ecology import *
 
-#--- CONSTANTS ---------------------------------------------------------------+
+#--- Ecology Parameters ------------------------------------------------------+
 
 #Put this in text file?
 settings = {}
 
 # FIELD PARAMETERS
-# BORDERS
+# BORDERS (SCREEN COORDS)
 settings['x_min'] = -2.0        # west
 settings['x_max'] =  2.0        # east
-settings['y_min'] = -2.0        # south
-settings['y_max'] =  2.0        # north
+settings['y_min'] = -2.0        # north
+settings['y_max'] =  2.0        # south
 
 # SUN AND SOIL
 settings['sunshine'] = 10       # Sunlight energy density
@@ -110,10 +119,6 @@ def run(settings, biome):
 
 
 #--- RUN ----------------------------------------------------------------------+
-pygame.init()
-screen = pygame.display.set_mode((800,600))
-pygame.display.set_caption("Ecosim")
-
 biome = Biome(settings);
 run(settings, biome)
 

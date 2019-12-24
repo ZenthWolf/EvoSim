@@ -26,12 +26,14 @@ from math import atan2
 
 #--- FUNCTIONS ---------------------------------------------------------------+
 
+# Note use of screen coords (down is positive)
+
 def dist(x1,y1,x2,y2):
     return sqrt((x2-x1)**2 + (y2-y1)**2)
 
 def orientation(x1,y1,x2,y2): # from 1 -> 2
     d_x = x2 - x1
-    d_y = y2 - y1
+    d_y = -y2 + y1
     theta = degrees(atan2(d_y, d_x))
     return theta
 
@@ -58,14 +60,14 @@ def start_border_y(settings, border):
     if border == 0 or border == 1:  # west/east borders
         return uniform(settings['y_min'], settings['y_max'])
         
-    elif border == 2:  # south border
+    elif border == 2:  # north border
         return settings['y_min']
 
-    elif border == 3:  # north border
+    elif border == 3:  # south border
         return settings['y_max']
     
     else:
-        return 100000   # until better exception handling        
+        return 100000   # until better exception handling, exile mistaken beasts to the harsh desert!        
 
 
 def simulate_beasts(settings, screen, biome, beasts, foods, gen):
@@ -111,10 +113,11 @@ def simulate_beasts(settings, screen, biome, beasts, foods, gen):
             else:
                 shelter = []
                 # Distance to each border
-                shelter.append(beast.x - biome.x_min)
                 shelter.append(biome.x_max - beast.x)
-                shelter.append(beast.y - biome.y_min)
+                shelter.append(beast.x - biome.x_min)
                 shelter.append(biome.y_max - beast.y)
+                shelter.append(beast.y - biome.y_min)
+                
                 
                 shelter_choice = shelter.index(min(shelter))
                 
@@ -125,8 +128,10 @@ def simulate_beasts(settings, screen, biome, beasts, foods, gen):
                     beast.r_targ = 180
                 elif shelter_choice == 2:
                     beast.r_targ = 270
-                else:
+                elif shelter_choice == 3:
                     beast.r_targ = 90
+                else:
+                    beast.r_targ = 45
 
         # UPDATE ORGANISMS POSITION AND VELOCITY
         for beast in beasts:
@@ -243,7 +248,7 @@ class Food():
         return int((self.y + 2)*500/(4) + 10)
     
     def Draw(self, screen):
-        pygame.draw.circle(screen, self.color, (self.ScreenX(), self.ScreenY()), 10)
+        pygame.draw.circle(screen, self.color, (self.ScreenX(), self.ScreenY()), 3)
         
 class Beast():
     def __init__(self, settings):
@@ -271,7 +276,7 @@ class Beast():
         dx = self.v * cos(radians(self.r_targ)) * settings['dt']
         dy = self.v * sin(radians(self.r_targ)) * settings['dt']
         self.x += dx
-        self.y += dy
+        self.y -= dy
     
 class Plant():
     def __init__(self, settings):
