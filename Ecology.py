@@ -77,7 +77,7 @@ def start_border_y(settings, border):
         return 100000   # until better exception handling, exile mistaken beasts to the harsh desert!        
 
 
-def simulate_beasts(settings, screen, biome, beasts, foods, gen):
+def simulate_beasts(settings, screen, biome, gen):
     """Simulate beasts seeking nearest food and returning to shelter"""
     total_time_steps = int(settings['gen_time'] / settings['dt'])
 
@@ -86,42 +86,32 @@ def simulate_beasts(settings, screen, biome, beasts, foods, gen):
         # ASSUME THIS IS LAST STEP UNTIL PROVEN OTHERWISE
         complete = True
         
-        for beast in beasts:
+        for beast in biome.beasts:
             # IF NOT SHELTERING, CONTINUE SIMULATION
             if complete and not beast.sheltering:
                 complete = False
 
-           # IF EATING
-            if beast.eats < 2 and biome.food_left > 0:
-                for food in foods:
+            # IF SEEKING FOOD
+            if beast.eats < 2 and len(biome.foods) > 0:
+                beast.d_targ = 100
+                beast.r_targ = 0
+                for food in biome.foods:
 
                     # CALCULATE DISTANCE TO SELECTED FOOD PARTICLE
                     food_dist = dist(beast.x, beast.y, food.x, food.y)
-                    
-                    # EAT IF CLOSE
+
                     if food_dist <= 0.075:
                         beast.eats += food.energy
-                        del foods[foods.index(food)]
-                        biome.food_left -= 1
-                    # RESET DISTANCE AND HEADING TO NEXT TARGET
-                    beast.d_targ = 100
-                    beast.r_targ = 0
-
-            # IF SEEKING FOOD
-            if beast.eats < 2 and biome.food_left > 0:
-                for food in foods:
-
-                    # CALCULATE DISTANCE TO SELECTED FOOD PARTICLE
-                    food_dist = dist(beast.x, beast.y, food.x, food.y)
+                        del biome.foods[biome.foods.index(food)]
                     
                     # DETERMINE IF THIS IS CLOSER THAN CURRENT TARGET
-                    if food_dist < beast.d_targ:
+                    elif food_dist < beast.d_targ:
                         beast.d_targ = food_dist
                         beast.r_targ = orientation(beast.x, beast.y, food.x, food.y)
 
             # IF DYING
-            elif beast.eats == 0 and biome.food_left == 0:
-                del beasts[beasts.index(beast)]
+            elif beast.eats == 0 and len(biome.foods) == 0:
+                del biome.beasts[biome.beasts.index(beast)]
             # SEEK SHELTER
             elif not beast.sheltering:
                 shelter = []
@@ -150,20 +140,23 @@ def simulate_beasts(settings, screen, biome, beasts, foods, gen):
                     beast.r_targ = 45
 
         # UPDATE ORGANISMS POSITION AND VELOCITY
-        for beast in beasts:
+        for beast in biome.beasts:
             beast.update_vel(settings)
             beast.update_pos(settings)
         
         # DRAW SCREEN
         screen.fill((0,0,0))
-        for food in foods:
+        for food in biome.foods:
             food.Draw(screen)
-        for beast in beasts:
+        for beast in biome.beasts:
             beast.Draw(screen)
         pygame.display.update()
         pygame.time.delay(int(settings['dt']*1000))
         for event in pygame.event.get():
-            pass
+            if event.type == pygame.QUIT:
+                pygame.quit()
+            else:
+                pass
         
         #END IF ALL BEASTS SHELTERED
         if complete:
@@ -171,11 +164,12 @@ def simulate_beasts(settings, screen, biome, beasts, foods, gen):
 
 
     #CHECK FOR FAILED TO SHELTER:
-    for beast in beasts:
+    for beast in biome.beasts:
         if beast.d_targ > 0.075:
-             del beasts[beasts.index(beast)]
+            print("BEAST EXPOSED!")
+            del biome.beasts[biome.beasts.index(beast)]
     
-    return beasts
+    return biome.beasts
 
     
 def newgen(settings, beasts):
@@ -208,9 +202,20 @@ class Biome:
         self.y_min = settings['y_min']         # south border
         self.y_max = settings['y_max']         # north border
         
-        # RESOURCES
-        self.food_left = settings['food_num']  # food remaining
-
+        # ENTITIES
+        self.foods = []     # list of food
+        self.populate_foods(settings, settings['food_num'])
+        self.beasts = []    #list of beasts
+        self.populate_beasts(settings, settings['init_beasts'])
+        
+    def populate_beasts(self, settings, num_beasts):
+        for i in range(0, num_beasts):
+            self.beasts.append(Beast(settings))
+    
+    def populate_foods(self, settings, num_foods):
+        for i in range(0, num_foods):
+            self.foods.append(Food(settings))
+            
 class Food():
     """Abstract 'food' particle"""
     def __init__(self, settings):
@@ -283,6 +288,22 @@ class Beast():
         dy = self.v * sin(radians(self.r_targ)) * settings['dt']
         self.x += dx
         self.y -= dy
+        
+    # FIND FOOD
+    def seek_food(self, foods):
+        self.d_targ = 100
+        self.r_targ = 0
+        for food in foods:
+            food_dist = dist(self.x, self.y, food.x, food.y)
+
+            if food_dist <= 0.075:
+                self.eats += food.energy
+                del foods[foods.index(food)]
+#                biome.food_left -= 1
+                    
+            elif food_dist < self.d_targ:
+                self.d_targ = food_dist
+                self.r_targ = orientation(self.x, self.y, food.x, food.y)
     
     # DRAWING
     def Draw(self, screen):
