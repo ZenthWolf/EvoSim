@@ -93,21 +93,7 @@ def simulate_beasts(settings, screen, biome, gen):
 
             # IF SEEKING FOOD
             if beast.eats < 2 and len(biome.foods) > 0:
-                beast.d_targ = 100
-                beast.r_targ = 0
-                for food in biome.foods:
-
-                    # CALCULATE DISTANCE TO SELECTED FOOD PARTICLE
-                    food_dist = dist(beast.x, beast.y, food.x, food.y)
-
-                    if food_dist <= 0.075:
-                        beast.eats += food.energy
-                        del biome.foods[biome.foods.index(food)]
-                    
-                    # DETERMINE IF THIS IS CLOSER THAN CURRENT TARGET
-                    elif food_dist < beast.d_targ:
-                        beast.d_targ = food_dist
-                        beast.r_targ = orientation(beast.x, beast.y, food.x, food.y)
+                beast.seek_food(biome.foods)
 
             # IF DYING
             elif beast.eats == 0 and len(biome.foods) == 0:
