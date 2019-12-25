@@ -29,21 +29,26 @@ from math import atan2
 # Note use of screen coords (down is positive)
 
 def dist(x1,y1,x2,y2):
+    """"Distance calculation from 1->2"""
     return sqrt((x2-x1)**2 + (y2-y1)**2)
 
-def orientation(x1,y1,x2,y2): # from 1 -> 2
+def orientation(x1,y1,x2,y2):
+    """Angle from 1->2 in degrees for screen coords"""
     d_x = x2 - x1
     d_y = -y2 + y1
     theta = degrees(atan2(d_y, d_x))
     return theta
 
 def circ_area(r):
+    """Area of circle"""
     return pi*(r**2)
 
-def circ_overlap(d, r1, r2): # Overlap of 2 circles- replace with diamond if time is costly
+def circ_overlap(d, r1, r2):
+    """Area of overlap of 2 circles"""
     return (r1**2)*acos((d**2 + r1**2 - r2**2)/(2*d*r1)) + (r2**2)*acos((d**2 + r2**2 - r1**2)/(2*d*r2)) - 0.5*sqrt((-d+r1+r2)*(d-r1+r2)*(d+r1-r2)*(d+r1+r2))
 
 def start_border_x(settings, border):
+    """Random x-position along each possible border"""
     if border == 0:  # west border
         return settings['x_min']
         
@@ -57,6 +62,7 @@ def start_border_x(settings, border):
         return 100000   # until better exception handling
 
 def start_border_y(settings, border):
+    """Random y-position along each possible border"""
     if border == 0 or border == 1:  # west/east borders
         return uniform(settings['y_min'], settings['y_max'])
         
@@ -71,7 +77,7 @@ def start_border_y(settings, border):
 
 
 def simulate_beasts(settings, screen, biome, beasts, foods, gen):
-
+    """Simulate beasts seeking nearest food and returning to shelter"""
     total_time_steps = int(settings['gen_time'] / settings['dt'])
 
     #--- CYCLE THROUGH EACH TIME STEP ---------------------+
@@ -171,7 +177,7 @@ def simulate_beasts(settings, screen, biome, beasts, foods, gen):
     return beasts
 
 def simulate_plants(settings, biome, plants, gen):
-
+    """Simulate plant growth and competition"""
     total_time_steps = int(settings['gen_time'] / settings['dt'])
 
     #--- CYCLE THROUGH EACH TIME STEP ---------------------+
@@ -227,11 +233,9 @@ def simulate_plants(settings, biome, plants, gen):
 
     
 def newgen(settings, beasts):
-    print("len(beasts): " + str(len(beasts)))
+    """Create the next generation of beasts"""
     for beast in beasts:
-        print("beast.eats: " + str(beast.eats))
         if beast.eats >= 2:
-            print("A new pup!")
             beasts.append(Beast(settings))
         
         beast.d_targ = 100   # distance to nearest food/shelter
@@ -242,13 +246,15 @@ def newgen(settings, beasts):
     return beasts
     
 def newseason(settings, biome):
+    """Sets next generation environment - resets food to max"""
     biome.food_left = settings['food_num']
-    
+#    biome.food_left += 10
     return biome
 
 #--- CLASSES -----------------------------------------------------------------+
 
 class Biome:
+    """Biome of ecosystem"""
     def __init__(self, settings):
         # BORDER
         self.x_min = settings['x_min']         # west border
@@ -260,6 +266,7 @@ class Biome:
         self.food_left = settings['food_num']  # food remaining
 
 class Food():
+    """Abstract 'food' particle"""
     def __init__(self, settings):
         # POSITION
         self.x = uniform(settings['x_min'], settings['x_max'])
@@ -274,15 +281,19 @@ class Food():
     
     # SCREEN MAPPING FUNCTIONS
     def ScreenX(self):
+        """Identifies x-position on screen"""
         return int((self.x + 2)*500/(4) + 10)
     def ScreenY(self):
+        """Identifies y-position on screen"""
         return int((self.y + 2)*500/(4) + 10)
     
     # DRAWING
     def Draw(self, screen):
+        """Draw to screen"""
         pygame.draw.circle(screen, self.color, (self.ScreenX(), self.ScreenY()), self.size)
         
 class Beast():
+    """Beasts that seek food"""
     def __init__(self, settings):
         # POSITION AND MOVEMENT
         start = randint(0,3)
@@ -305,19 +316,23 @@ class Beast():
         
     # SCREEN MAPPING FUNCTIONS    
     def ScreenX(self):
+        """Identifies x-position on screen"""
         return int((self.x + 2)*500/(4) + 10)
     def ScreenY(self):
+        """Identifies x-position on screen"""
         return int((self.y + 2)*500/(4) + 10)
     
     ## ACTIONS
     # UPDATE VELOCITY
     def update_vel(self, settings):
+        """Sets velocity so that target is not overshot"""
         small_step_speed = self.d_targ/settings['dt'] # speed to take one step to target
         
         self.v= min(small_step_speed, self.v_max)
         
     # UPDATE POSITION
     def update_pos(self, settings):
+        """The beast walks!"""
         dx = self.v * cos(radians(self.r_targ)) * settings['dt']
         dy = self.v * sin(radians(self.r_targ)) * settings['dt']
         self.x += dx
@@ -325,6 +340,7 @@ class Beast():
     
     # DRAWING
     def Draw(self, screen):
+        """Draw to screen"""
         pygame.draw.circle(screen, self.color, (self.ScreenX(), self.ScreenY()), self.size)
     
 class Plant():
@@ -362,23 +378,30 @@ class Plant():
         ## ENERGY/NUTRIENT REQUIREMENT CALCULATION
         # ENERGY
         def stemEnergy_need(self, settings):
+            """Energy to maintain the flower/stem"""
             return self.height * settings['stem_height_cost'] + (self.width ** 2) * settings['stem_width_cost'] + (self.leaves ** 1.5) * settings['stem_leaf_cost']
         def rootEnergy_need(self, settings):
+            """Energy to maintain the root system"""
             return (self.rootWidth ** 2) * settings['root_width_cost'] + (self.rootSize ** 1.5) * settings['root_size_cost']
         def energy_need(self, settings):
+            """Total energy requirement to maintain plant"""
             return stemEnergy_need(settings) + rootEnergy_need(settings)
 
         # NUTRIENTS
         def stemNutrient_need(self, settings):
+            """Nutrients to maintain the flower/stem"""
             return self.height * settings['stem_height_nutrient'] + (self.width ** 2) * settings['stem_width_nutrient'] + (self.leaves ** 1.5) * settings['stem_leaf_nutrient']
         def rootNutrient_need(self, settings):
+            """Nutrients to maintain the root system"""
             return (self.rootWidth ** 2) * settings['root_width_nutrient'] + (self.rootSize ** 1.5) * settings['root_size_nutrient']
-        def nutrient_need(self, settings):            
+        def nutrient_need(self, settings):        
+            """Total mutrients requirement to maintain plant"""
             return stemNutrient_need(settings) + rootNutrient_need(settings)
         
         #GROW CALCULATION
         #### WHAT DA FU--
         def grow(self, settings):
+            """Tries to grow the plant, so that root/stem finish simulatenously"""
             # Energy costs for growing are increased, nutrient costs are flat
             self.energy = self.energy*settings['growth_efficiency']
             

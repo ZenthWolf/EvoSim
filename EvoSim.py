@@ -76,7 +76,7 @@ settings['root_size_nutrient'] = 0.05
 
 
 def run(settings, biome):
-
+    """Beasts seek a set amount of food per generation"""
     #--- POPULATE THE ENVIRONMENT WITH FOOD ---------------+
     foods = []
     for i in range(0,biome.food_left):
@@ -113,10 +113,9 @@ def run(settings, biome):
         
         foods = []
         for i in range(0,biome.food_left):
+#        for i in range(0,10):
             foods.append(Food(settings))
             
-
-    pass
 
 
 #--- RUN ----------------------------------------------------------------------+
