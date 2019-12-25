@@ -12,6 +12,7 @@ Simple Evolution Simulator in Python
 
 import pygame
 
+
 from random import randint
 from random import uniform
 
@@ -176,61 +177,6 @@ def simulate_beasts(settings, screen, biome, beasts, foods, gen):
     
     return beasts
 
-def simulate_plants(settings, biome, plants, gen):
-    """Simulate plant growth and competition"""
-    total_time_steps = int(settings['gen_time'] / settings['dt'])
-
-    #--- CYCLE THROUGH EACH TIME STEP ---------------------+
-    for t_step in range(0, total_time_steps, 1):
-
-        # CHECK FOR RIVALS
-        for plant in plants:
-            for rival in plants:
-                if not plant == rival:
-                    rival_dist = dist(plant.x, plant.y, rival.x, rival.y)
-
-                    # UPDATE RIVALS
-                    plant.sunRivals = []
-                    plant.rootRivals = []
-                    if plant.width + rival.width >= rival_dist and plant.height < rival.height:  # DUNK ON THE SHORT PLANTS!
-                        plant.sunRivals.append([rival.height, plants.index(rival)])
-                    if plant.rootWidth + rival.rootWidth >= rival_dist:
-                        plant.rootRivals.append(plants.index(rival))
-        
-        # COMPETE FOR SUNLIGHT
-        for plant in plants:
-            available_energy = circ_area(plant.width)*settings['sunshine']
-            for rival in plant.sunRivals:
-                competition_area = circ_overlap(dist(plant.x, plant.y, rival.x, rival.y), plant.width, rival.width)
-                fractional_area = competition_area/circ_area(plant.width)
-                available_energy -= available_energy * fractional_area * rival.leaves * settings['absorption']
-             
-            plant.energy += available_energy * plant.leaves * settings['absorption']
-
-        # COMPETE FOR NUTRIENTS
-        for plant in plants:
-            available_nutrients = circ_area(plant.rootWidth)*settings['nutrients']
-            rival_root_factor = 0
-            for rival in plant.rootRivals:
-                competition_area = circ_overlap(dist(plant.x, plant.y, rival.x, rival.y), plant.rootWidth, rival.rootWidth)
-                
-                rival_root_factor += competition_area * rival.rootSize
-             
-            plant.nutrients += available_nutrients * plant.rootSize / rival_root_factor
-        
-        # ENERGY/NUTRIENT BUDGET
-        for plant in plants:
-            plant.energy -= plant.energy_need
-            plant.nutrients -= plant.nutrient_need
-            
-            if plant.energy < 0 or plant.nutrients == 0:
-                del plants[plants.index(plant)]
-            
-            else:
-                plant.grow(settings)
-
-    return plants
-
     
 def newgen(settings, beasts):
     """Create the next generation of beasts"""
@@ -343,101 +289,3 @@ class Beast():
         """Draw to screen"""
         pygame.draw.circle(screen, self.color, (self.ScreenX(), self.ScreenY()), self.size)
     
-class Plant():
-    def __init__(self, settings):
-        # POSITION
-        self.x = uniform(settings['x_min'], settings['x_max'])
-        self.y = uniform(settings['y_min'], settings['y_max'])
-        
-        # COUNTERS AND FLAGS
-        self.energy = 0
-        self.nutrients = 0
-        
-        # RIVAL LISTS
-        self.sunRivals = []
-        self.rootRivals = []
-        
-        # ABOVE GROUND STATS
-        self.height = 0
-        self.height_max = 10
-        self.width = 0
-        self.width_max = 0.5
-        self.leaves = 0
-        self.leaves_max = 1
-        
-        # BELOW GROUND
-        self.rootWidth = 0
-        self.rootWidth_max = 0.5
-        self.rootSize = 0
-        self.rootSize_max = 1
-
-         ##########################################
-        #        ENTERING THE EYE PAIN ZONE        #
-         ##########################################
-        
-        ## ENERGY/NUTRIENT REQUIREMENT CALCULATION
-        # ENERGY
-        def stemEnergy_need(self, settings):
-            """Energy to maintain the flower/stem"""
-            return self.height * settings['stem_height_cost'] + (self.width ** 2) * settings['stem_width_cost'] + (self.leaves ** 1.5) * settings['stem_leaf_cost']
-        def rootEnergy_need(self, settings):
-            """Energy to maintain the root system"""
-            return (self.rootWidth ** 2) * settings['root_width_cost'] + (self.rootSize ** 1.5) * settings['root_size_cost']
-        def energy_need(self, settings):
-            """Total energy requirement to maintain plant"""
-            return stemEnergy_need(settings) + rootEnergy_need(settings)
-
-        # NUTRIENTS
-        def stemNutrient_need(self, settings):
-            """Nutrients to maintain the flower/stem"""
-            return self.height * settings['stem_height_nutrient'] + (self.width ** 2) * settings['stem_width_nutrient'] + (self.leaves ** 1.5) * settings['stem_leaf_nutrient']
-        def rootNutrient_need(self, settings):
-            """Nutrients to maintain the root system"""
-            return (self.rootWidth ** 2) * settings['root_width_nutrient'] + (self.rootSize ** 1.5) * settings['root_size_nutrient']
-        def nutrient_need(self, settings):        
-            """Total mutrients requirement to maintain plant"""
-            return stemNutrient_need(settings) + rootNutrient_need(settings)
-        
-        #GROW CALCULATION
-        #### WHAT DA FU--
-        def grow(self, settings):
-            """Tries to grow the plant, so that root/stem finish simulatenously"""
-            # Energy costs for growing are increased, nutrient costs are flat
-            self.energy = self.energy*settings['growth_efficiency']
-            
-            # Energy to maintain the maximum plant            
-            stemEnergy_max = self.height_max * settings['stem_height_cost'] + (self.width_max ** 2) * settings['stem_width_cost'] + (self.leaves_max ** 1.5) * settings['stem_leaf_cost']
-            rootEnergy_max = (self.rootWidth_max ** 2) * settings['root_width_cost'] + (self.rootSize_max ** 1.5) * settings['root_size_cost']
-
-            # Nutrients to maintain the maximum plant
-            stemNutrient_max = self.height_max * settings['stem_height_nutrient'] + (self.width_max ** 2) * settings['stem_width_nutrient'] + (self.leaves_max ** 1.5) * settings['stem_leaf_nutrient']
-            rootNutrient_max = (self.rootWidth_max ** 2) * settings['root_width_nutrient'] + (self.rootSize_max ** 1.5) * settings['root_size_nutrient']
-            
-            # Growth ratios are determined by available energy, such that both mature at same rate
-            stemRatio = stemEnergy_max / (stemEnergy_max + rootEnergy_max)
-            rootRatio = rootEnergy_max / (stemEnergy_max + rootEnergy_max)
-            
-            stemGrowthRate = 0;
-            rootGrowthRate = 0;
-            
-            while True: # do-loop emulation to balance nutrient and energy costs both
-                #Nutrient cost has different weights
-                #Energy growth can cover the remaining fractional development
-                stemGrowthRate = stemRatio * self.energy / (stemEnergy_max - self.stemEnergy_need(settings))
-                rootGrowthRate = rootRatio * self.energy / (rootEnergy_max - self.rootEnergy_need(settings))
-
-                #Nutrient costs with that development rate are:
-                stemNutrientRequired = stemGrowthRate * (stemNutrient_max - stemNutrient_need)
-                rootNutrientRequired = rootGrowthRate * (rootNutrient_max - rootNutrient_need)
-            
-                
-                if(stemNutrientRequired + rootNutrientRequired < self.nutrients):
-                    # if sufficient nutrients to utilize all energy, proceed
-                    break
-                else:
-                    # if insufficient nutrients, use 10% less energy
-                    self.energy = self.energy*0.9
-            
-            ### Grow stem and root by similar division
-            ### Worry intensely about not escaping the do loop
-            

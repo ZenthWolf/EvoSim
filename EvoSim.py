@@ -22,9 +22,9 @@ graphic_settings['window_title'] = "Ecosim"
 pygame.init()
 screen = pygame.display.set_mode(graphic_settings['screen_size'])
 pygame.display.set_caption(graphic_settings['window_title'])
-from Ecology import *
+from Ecology import (Food, Beast, Biome, simulate_beasts, newgen, newseason)
 
-#--- Ecology Parameters ------------------------------------------------------+ts : 50
+#--- Ecology Parameters ------------------------------------------------------+
 
 
 #Put this in text file?
@@ -53,24 +53,6 @@ settings['dt'] = 0.04           # simulation time step      (dt)
 settings['init_beasts'] = 1     #starting population
 settings['v_max'] = 0.5         # max velocity              (units per second)
 
-# PLANT PARAMETERS
-settings['absorption'] = 0.85   # Max efficiency of sunlight absoption
-settings['growth_efficiency'] = 0.8 #Growing costs more energy than maintaining
-# Energy Costs
-settings['stem_height_cost'] = 0.5
-settings['stem_width_cost'] = 0.25
-settings['stem_leaf_cost'] = 0.1
-
-settings['root_width_cost'] = 0.25
-settings['root_size_cost'] = 0.1
-
-#Nutrient Costs
-settings['stem_height_nutrient'] = 0.5
-settings['stem_width_nutrient'] = 0.25
-settings['stem_leaf_nutrient'] = 0.1
-
-settings['root_width_nutrient'] = 0.1
-settings['root_size_nutrient'] = 0.05 
 
 #--- MAIN --------------------------------------------------------------------+
 
