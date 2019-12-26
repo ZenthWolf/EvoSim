@@ -46,7 +46,9 @@ def circ_area(r):
 
 def circ_overlap(d, r1, r2):
     """Area of overlap of 2 circles"""
-    return (r1**2)*acos((d**2 + r1**2 - r2**2)/(2*d*r1)) + (r2**2)*acos((d**2 + r2**2 - r1**2)/(2*d*r2)) - 0.5*sqrt((-d+r1+r2)*(d-r1+r2)*(d+r1-r2)*(d+r1+r2))
+    return ( (r1**2)*acos((d**2 + r1**2 - r2**2)/(2*d*r1))
+           + (r2**2)*acos((d**2 + r2**2 - r1**2)/(2*d*r2))
+           - 0.5*sqrt((-d+r1+r2)*(d-r1+r2)*(d+r1-r2)*(d+r1+r2)) )
 
 def start_border_x(settings, border):
     """Random x-position along each possible border"""
@@ -74,27 +76,7 @@ def start_border_y(settings, border):
         return settings['y_max']
     
     else:
-        return 100000   # until better exception handling, exile mistaken beasts to the harsh desert!        
-
-    
-def newgen(settings, beasts):
-    """Create the next generation of beasts"""
-    for beast in beasts:
-        if beast.eats >= 2:
-            beasts.append(Beast(settings))
-        
-        beast.d_targ = 100   # distance to nearest food/shelter
-        beast.r_targ = 0     # orientation to nearest food/shelter (degrees)
-        beast.eats = 0       # food eaten this generation
-        beast.sheltering = False # Going out into the world again
-
-    return beasts
-    
-def newseason(settings, biome):
-    """Sets next generation environment - resets food to max"""
-    biome.food_left = settings['food_num']
-#    biome.food_left += 10
-    return biome
+        return 100000   # exile mistaken beasts to the harsh desert!        
 
 #--- CLASSES -----------------------------------------------------------------+
 
@@ -113,6 +95,7 @@ class Biome:
         self.beasts = []    #list of beasts
         self.populate_beasts(settings, settings['init_beasts'])
 
+    # MANAGE ECOSYSTEM ENTITIES
     def populate_foods(self, settings, num_foods):
         for i in range(0, num_foods):
             self.foods.append(Food(settings)) 
@@ -127,6 +110,7 @@ class Biome:
     def kill_beast(self, beast):
         self.beasts.remove(beast)
     
+    # SIMULATION METHODS
     def time_step_beasts(self,settings):
         """Calculate next timestep for beasts"""
         for beast in self.beasts:
@@ -186,8 +170,37 @@ class Biome:
                 break
         
         self.check_beast_exposure()
+    
+    # NEW GENERATION
+    
+    def breed_beasts(self, settings):
+        """Create the next generation of beasts and reinit"""
+        _new_beasts = 0
+        for beast in self.beasts:
+            if beast.eats >= 2:
+                _new_beasts += 1
+        
+            beast.d_targ = 100       # distance to nearest food/shelter
+            beast.r_targ = 0         # orientation to nearest food/shelter (degrees)
+            beast.eats = 0           # food eaten this generation
+            beast.sheltering = False # Going out into the world again
+        self.populate_beasts(settings, _new_beasts)
+        
+        print("IT IS A GOOD DAY TO DIE\n")
+        print("Ending Food  : " + str( len(self.foods)) )
+        print("Ending beasts : " + str( len(self.beasts)) + "\n")
+        print("===========================================================")
+    
+    def grow_food(self, settings):
+        """Set food for next generation"""
+        self.foods = []
+        self.populate_foods(settings, settings['food_num'])
+    
+    def next_season(self, settings):
+        self.breed_beasts(settings)
+        self.grow_food(settings)
 
-            
+          
 class Food():
     """Abstract 'food' particle"""
     def __init__(self, settings):
@@ -249,7 +262,7 @@ class Beast():
     # UPDATE VELOCITY
     def update_vel(self, settings):
         """Sets velocity so that target is not overshot"""
-        small_step_speed = self.d_targ/settings['dt'] # speed to take one step to target
+        small_step_speed = self.d_targ/settings['dt']
         
         self.v= min(small_step_speed, self.v_max)
         

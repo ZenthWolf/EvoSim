@@ -22,7 +22,7 @@ graphic_settings['window_title'] = "Ecosim"
 pygame.init()
 screen = pygame.display.set_mode(graphic_settings['screen_size'])
 pygame.display.set_caption(graphic_settings['window_title'])
-from Ecology import (Biome, newgen, newseason)
+from Ecology import (Biome)
 
 #--- Ecology Parameters ------------------------------------------------------+
 
@@ -70,25 +70,11 @@ def run(settings, biome):
         # SIMULATE
         biome.simulate_beasts(settings, screen)
 
-        # EVOLVE
-        biome.beasts = newgen(settings, biome.beasts)
-        print("IT IS A GOOD DAY TO DIE\n")
-
-        print("Ending Food  : " + str( len(biome.foods)) )
-        
-        print("Ending beasts : " + str( len(biome.beasts)) + "\n")
-        
-        print("===========================================================")
-        
-
-        biome = newseason(settings, biome)
-        
-        biome.foods = []
-        biome.populate_foods(settings, settings['food_num'])
+        biome.next_season(settings)
             
 
 
-#--- RUN ----------------------------------------------------------------------+
+#--- RUN ---------------------------------------------------------------------+
 biome = Biome(settings);
 run(settings, biome)
 
@@ -110,4 +96,4 @@ while waiting:
                 pygame.quit()
                 waiting = False
 
-#--- END ----------------------------------------------------------------------+
+#--- END ---------------------------------------------------------------------+
