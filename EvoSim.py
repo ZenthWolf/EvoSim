@@ -22,7 +22,7 @@ graphic_settings['window_title'] = "Ecosim"
 pygame.init()
 screen = pygame.display.set_mode(graphic_settings['screen_size'])
 pygame.display.set_caption(graphic_settings['window_title'])
-from Ecology import (Food, Beast, Biome, simulate_beasts, newgen, newseason)
+from Ecology import (Biome, newgen, newseason)
 
 #--- Ecology Parameters ------------------------------------------------------+
 
@@ -68,7 +68,7 @@ def run(settings, biome):
         print("Starting beasts : " + str( len(biome.beasts) ) + "\n")
         print("-----------------------------------------------------------")
         # SIMULATE
-        biome.beasts = simulate_beasts(settings, screen, biome, gen)
+        biome.simulate_beasts(settings, screen)
 
         # EVOLVE
         biome.beasts = newgen(settings, biome.beasts)
