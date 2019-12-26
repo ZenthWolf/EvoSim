@@ -11,18 +11,13 @@ Simple Evolution Simulator in Python
 
 import pygame
 
+from Ecology import Biome
 
 #--- Graphics Parameters -----------------------------------------------------+
 graphic_settings = {}
 
 graphic_settings['screen_size'] = (1024, 768)
 graphic_settings['window_title'] = "Ecosim"
-
-#--- Init Screen -------------------------------------------------------------+
-pygame.init()
-screen = pygame.display.set_mode(graphic_settings['screen_size'])
-pygame.display.set_caption(graphic_settings['window_title'])
-from Ecology import (Biome)
 
 #--- Ecology Parameters ------------------------------------------------------+
 
@@ -73,8 +68,13 @@ def run(settings, biome):
         biome.next_season(settings)
             
 
+#--- Init Screen -------------------------------------------------------------+
+pygame.init()
+screen = pygame.display.set_mode(graphic_settings['screen_size'])
+pygame.display.set_caption(graphic_settings['window_title'])
 
 #--- RUN ---------------------------------------------------------------------+
+
 biome = Biome(settings);
 run(settings, biome)
 
