@@ -66,7 +66,7 @@ def run(settings, biome):
         biome.simulate_beasts(settings, screen)
 
         biome.next_season(settings)
-            
+
 
 #--- Init Screen -------------------------------------------------------------+
 pygame.init()

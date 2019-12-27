@@ -12,7 +12,7 @@ from math import sqrt
 from math import pi
 from math import degrees
 from math import acos
-from math import atan2 
+from math import atan2
 
 #--- FUNCTIONS ---------------------------------------------------------------+
 
@@ -43,7 +43,7 @@ def start_border_x(settings, border):
     """Random x-position along each possible border"""
     if border == 0:  # west border
         return settings['x_min']
-        
+    
     elif border == 1:  # east border
         return settings['x_max']
 
@@ -57,12 +57,12 @@ def start_border_y(settings, border):
     """Random y-position along each possible border"""
     if border == 0 or border == 1:  # west/east borders
         return uniform(settings['y_min'], settings['y_max'])
-        
+    
     elif border == 2:  # north border
         return settings['y_min']
-
+    
     elif border == 3:  # south border
         return settings['y_max']
     
     else:
-        return 100000   # exile mistaken beasts to the harsh desert!  
+        return 100000   # exile mistaken beasts to the harsh desert!
