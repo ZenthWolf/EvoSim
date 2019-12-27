@@ -41,6 +41,9 @@ class Biome:
         self.populateBeasts(settings, settings['init_beasts'])
         self.plants = []
         self.populatePlants(settings, settings['init_plants'])
+        
+        # COUNTERS
+        self.start_food = len(self.foods)
     
     # MANAGE ECOSYSTEM ENTITIES
     def populateFoods(self, settings, num_foods):
@@ -106,7 +109,7 @@ class Biome:
                         plant.sunRivals.append([rival.height, rival])
                     if plant.rootWidth + rival.rootWidth >= rival_dist:
                         plant.rootRivals.append(rival)
-        plant.sunRivals.sort(reverse = True)
+            plant.sunRivals.sort(reverse = True)
     
     def timeStepPlants(self, settings):
         """Calculate next timestep for plants"""
@@ -120,6 +123,7 @@ class Biome:
             
             if plant.energy < 0 or plant.nutrients < 0:
                 self.killPlant(plant)
+                print("DEATH! ENERGY = " + str(plant.energy) + " NUTRIENT: " + str(plant.nutrients))
             else:
                 plant.grow(settings)
     
@@ -187,10 +191,23 @@ class Biome:
         print("Ending beasts : " + str( len(self.beasts)) + "\n")
         print("===========================================================")
     
-    def growFood(self, settings):
+    def growFoodFlat(self, settings):
         """Set food for next generation"""
         self.foods = []
         self.populateFoods(settings, settings['food_num'])
+    
+    def growFood(self, settings):
+        """Grows food based on init and final population"""
+        growth_inhabition = self.start_food
+        
+        seedlings = 0
+        for seed in range(0, 2*self.start_food):
+            chance = randint(1,100)
+            if chance >= growth_inhabition or chance == 100:
+                seedlings += 1
+        
+        self.populateFoods(settings, seedlings)
+        self.start_food = len(self.foods)
     
     def nextSeason(self, settings):
         self.breedBeasts(settings)
@@ -321,7 +338,7 @@ class Beast():
 
 
 class Plant():
-    def __init__(self, settings, _init_energy = 10, _init_nutrients = 10):
+    def __init__(self, settings, _init_energy = None, _init_nutrients = None):
         # POSITION
         self.x = uniform(settings['x_min'], settings['x_max'])
         self.y = uniform(settings['y_min'], settings['y_max'])
@@ -329,6 +346,10 @@ class Plant():
         # COUNTERS AND FLAGS
         self.energy = _init_energy
         self.nutrients = _init_nutrients
+        if self.energy is None:
+            self.energy = settings['init_energy']
+        if self.nutrients is None:
+            self.nutrients = settings['init_nutrients']
         
         # RIVAL LISTS
         self.sunRivals = []
@@ -336,7 +357,7 @@ class Plant():
         
         # ABOVE GROUND STATS
         self.height = 0
-        self.height_max = 10
+        self.height_max = 5
         self.width = 0
         self.width_max = 0.5
         self.leaves = 0
@@ -461,8 +482,8 @@ class Plant():
         if _rootSize is None:
             _rootSize = self.rootSize
         
-        return self.rootWidthNutrientCost(self, settings, _width) \
-             * self.rootNutrientCost(self, settings, _rootSize)
+        return self.rootWidthNutrientCost(settings, _width) \
+             * self.rootNutrientCost(settings, _rootSize)
     
     def nutrientNeed(self, settings):
         return ( self.stemNutrientNeed(settings)
@@ -506,6 +527,8 @@ class Plant():
     def findGrowRate(self, settings):
         """Balances energy and nutrients for growth"""
         _growRate = self.energy/(self.energyNeedMax(settings) - self.energyNeed(settings))
+        if _growRate > 1.0:
+            _growRate = 1.0;
         
         _nutrientNeed = _growRate*(self.nutrientNeedMax(settings) - self.nutrientNeed(settings))
         
@@ -546,10 +569,12 @@ class Plant():
             
             _growRate = self.findGrowRate(settings)
             
+            print("self.energy: " + str(self.energy) + " growRate: " +str(_growRate))
+            
             self.growStem(_growRate)
             self.growRoot(_growRate)
     
     # DRAWING
     def Draw(self, screen):
         """Draw to screen"""
-        pygame.draw.circle(screen, self.color, (self.ScreenX(), self.ScreenY()), self.width)
+        pygame.draw.circle(screen, self.color, (self.ScreenX(), self.ScreenY()), int(10*self.width))

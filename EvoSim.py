@@ -33,41 +33,43 @@ settings['y_min'] = -2.0        # north
 settings['y_max'] =  2.0        # south
 
 # SUN AND SOIL
-settings['sunshine'] = 10       # Sunlight energy density
-settings ['nutrients'] = 10     # Soil nutrient density
+settings['sunshine'] = 10        # Sunlight energy density
+settings ['nutrients'] = 8      # Soil nutrient density
 
 # EVOLUTION SETTINGS
-settings['food_num'] = 50       # number of food particles (for beast sim)
-settings['gens'] = 10           # number of generations
+settings['food_num'] = 5        # number of food particles (for beast sim)
+settings['gens'] = 10
 
 # SIMULATION SETTINGS
 settings['gen_time'] = 10       # generation length         (seconds)
-settings['dt'] = 0.04           # simulation time step      (dt)
+settings['dt'] = 0.04           # simulation time step      (seconds)
 
 # BEAST PARAMETERS
-settings['init_beasts'] = 1     #starting population
+settings['init_beasts'] = 1
 settings['v_max'] = 0.5         # max velocity              (units per second)
 
 
 # PLANT PARAMETERS
-settings['init_plants'] = 0
-settings['absorption'] = 0.85   # Max efficiency of sunlight absoption
-settings['growth_efficiency'] = 0.8 #Growing costs more energy than maintaining
+settings['init_plants'] = 1
+settings['absorption'] = 0.7        # Max efficiency of sunlight absoption
+settings['growth_efficiency'] = 0.7 #Growing costs more energy than maintaining
+settings['init_energy'] = .1
+settings['init_nutrients'] = .1
 # Energy Costs
-settings['stem_height_cost'] = 0.5
-settings['stem_width_cost'] = 0.25
-settings['stem_leaf_cost'] = 0.1
+settings['stem_height_cost'] = 3.5
+settings['stem_width_cost'] = 1.5
+settings['stem_leaf_cost'] = 0.75
 
-settings['root_width_cost'] = 0.25
-settings['root_size_cost'] = 0.1
+settings['root_width_cost'] = 1.5
+settings['root_size_cost'] = 1
 
 #Nutrient Costs
-settings['stem_height_nutrient'] = 0.5
-settings['stem_width_nutrient'] = 0.25
-settings['stem_leaf_nutrient'] = 0.1
+settings['stem_height_nutrient'] = 3.5
+settings['stem_width_nutrient'] = 1.25
+settings['stem_leaf_nutrient'] = 1
 
-settings['root_width_nutrient'] = 0.1
-settings['root_size_nutrient'] = 0.05 
+settings['root_width_nutrient'] = 1
+settings['root_size_nutrient'] = 0.5
 
 #--- MAIN --------------------------------------------------------------------+
 
@@ -80,12 +82,16 @@ def run(settings, biome):
         print("GEN: " + str(gen) + "\n")
         print("Starting Food: " + str( len(biome.foods)) )
         
-        print("Starting beasts : " + str( len(biome.beasts) ) + "\n")
+        print("Starting beasts : " + str( len(biome.beasts)) )
+        
+        print("Startinf plants : " + str( len(biome.plants) ) + "\n")
         print("-----------------------------------------------------------")
         # SIMULATE
-        biome.simulateBeasts(settings, screen)
-
+        #biome.simulateBeasts(settings, screen)
+        biome.simulatePlants(settings, screen)
+        
         biome.nextSeason(settings)
+        biome.foods = []
 
 
 #--- Init Screen -------------------------------------------------------------+
