@@ -49,6 +49,26 @@ settings['init_beasts'] = 1     #starting population
 settings['v_max'] = 0.5         # max velocity              (units per second)
 
 
+# PLANT PARAMETERS
+settings['init_plants'] = 0
+settings['absorption'] = 0.85   # Max efficiency of sunlight absoption
+settings['growth_efficiency'] = 0.8 #Growing costs more energy than maintaining
+# Energy Costs
+settings['stem_height_cost'] = 0.5
+settings['stem_width_cost'] = 0.25
+settings['stem_leaf_cost'] = 0.1
+
+settings['root_width_cost'] = 0.25
+settings['root_size_cost'] = 0.1
+
+#Nutrient Costs
+settings['stem_height_nutrient'] = 0.5
+settings['stem_width_nutrient'] = 0.25
+settings['stem_leaf_nutrient'] = 0.1
+
+settings['root_width_nutrient'] = 0.1
+settings['root_size_nutrient'] = 0.05 
+
 #--- MAIN --------------------------------------------------------------------+
 
 
@@ -63,9 +83,9 @@ def run(settings, biome):
         print("Starting beasts : " + str( len(biome.beasts) ) + "\n")
         print("-----------------------------------------------------------")
         # SIMULATE
-        biome.simulate_beasts(settings, screen)
+        biome.simulateBeasts(settings, screen)
 
-        biome.next_season(settings)
+        biome.nextSeason(settings)
 
 
 #--- Init Screen -------------------------------------------------------------+

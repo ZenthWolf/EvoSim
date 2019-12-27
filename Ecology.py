@@ -35,47 +35,57 @@ class Biome:
         self.y_max = settings['y_max']         # north border
         
         # ENTITIES
-        self.foods = []     # list of food
-        self.populate_foods(settings, settings['food_num'])
-        self.beasts = []    #list of beasts
-        self.populate_beasts(settings, settings['init_beasts'])
+        self.foods = []
+        self.populateFoods(settings, settings['food_num'])
+        self.beasts = []
+        self.populateBeasts(settings, settings['init_beasts'])
+        self.plants = []
+        self.populatePlants(settings, settings['init_plants'])
     
     # MANAGE ECOSYSTEM ENTITIES
-    def populate_foods(self, settings, num_foods):
+    def populateFoods(self, settings, num_foods):
         for i in range(0, num_foods):
             self.foods.append(Food(settings))
     
-    def populate_beasts(self, settings, num_beasts):
+    def populateBeasts(self, settings, num_beasts):
         for i in range(0, num_beasts):
             self.beasts.append(Beast(settings))
     
-    def consume_food(self, food):
+    def populatePlants(self, settings, num_plants):
+        for i in range(0, num_plants):
+            self.plants.append(Plant(settings))
+    
+    def consumeFood(self, food):
         self.foods.remove(food)
     
-    def kill_beast(self, beast):
+    def killBeast(self, beast):
         self.beasts.remove(beast)
     
+    def killPlant(self, plant):
+        self.plants.remove(plant)
+    
     # SIMULATION METHODS
-    def time_step_beasts(self,settings):
+    ### BEAST SIMULATOR
+    def timeStepBeasts(self,settings):
         """Calculate next timestep for beasts"""
         for beast in self.beasts:
             
             if beast.eats < 2 and len(self.foods) > 0:
                 beast.seek_food(self)
             elif beast.eats == 0 and len(self.foods) == 0:
-                self.kill_beast(beast)
+                self.killBeast(beast)
             elif not beast.sheltering:
                 beast.seek_shelter(self)
             
             beast.update_vel(settings)
             beast.update_pos(settings)
     
-    def check_beast_exposure(self):
+    def checkBeastExposure(self):
         for beast in self.beasts:
             if beast.d_targ > 0.075:
-                self.kill_beast(beast)
+                self.killBeast(beast)
     
-    def all_beasts_sheltered(self):
+    def allBeastsSheltered(self):
         sheltered = True
         for beast in self.beasts:
             if not beast.sheltering:
@@ -84,16 +94,47 @@ class Biome:
         
         return sheltered
     
-    def draw_biome(self, screen):
+        ### PLANT SIMULATOR
+    def findRivals(self):
+        for plant in self.plants:
+            for rival in self.plants:
+                if not plant == rival:
+                    rival_dist = dist(plant.x, plant.y, rival.x, rival.y)
+
+                    # UPDATE LIST
+                    if plant.width + rival.width >= rival_dist and plant.height < rival.height:  # DUNK ON THE SHORT PLANTS!
+                        plant.sunRivals.append([rival.height, rival])
+                    if plant.rootWidth + rival.rootWidth >= rival_dist:
+                        plant.rootRivals.append(rival)
+        plant.sunRivals.sort(reverse = True)
+    
+    def timeStepPlants(self, settings):
+        """Calculate next timestep for plants"""
+        self.findRivals()
+        for plant in self.plants:
+            # Only if not a seed
+            if plant.height != 0:
+                plant.absorbSunlight(settings)
+                plant.absorbNutrients(settings)
+            plant.maintainance(settings)
+            
+            if plant.energy < 0 or plant.nutrients < 0:
+                self.killPlant(plant)
+            else:
+                plant.grow(settings)
+    
+    def drawBiome(self, screen):
         screen.fill((0,0,0))
         for food in self.foods:
             food.Draw(screen)
         for beast in self.beasts:
             beast.Draw(screen)
+        for plant in self.plants:
+            plant.Draw(screen)
         pygame.display.update()
     
     
-    def handle_events(self):
+    def handleEvents(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -101,24 +142,34 @@ class Biome:
                 pass
     
     
-    def simulate_beasts(self, settings, screen):
+    def simulateBeasts(self, settings, screen):
         """Simulate beasts seeking nearest food and returning to shelter"""
         total_time_steps = int(settings['gen_time'] / settings['dt'])
         
         for t_step in range(0, total_time_steps, 1):
-            if not self.all_beasts_sheltered():
-                self.time_step_beasts(settings)
-                self.draw_biome(screen)
-                self.handle_events()
+            if not self.allBeastsSheltered():
+                self.timeStepBeasts(settings)
+                self.drawBiome(screen)
+                self.handleEvents()
                 pygame.time.delay(int(settings['dt']*1000))
             else:
                 break
         
-        self.check_beast_exposure()
+        self.checkBeastExposure()
+    
+    def simulatePlants(self,settings, screen):
+        """Simulate plants competing for nearby resources"""
+        total_time_steps = int(settings['gen_time'] / settings['dt'])
+        
+        for t_step in range(0, total_time_steps, 1):
+            self.timeStepPlants(settings)
+            self.drawBiome(screen)
+            self.handleEvents()
+            pygame.time.delay(int(settings['dt']*1000))
     
     # NEW GENERATION
     
-    def breed_beasts(self, settings):
+    def breedBeasts(self, settings):
         """Create the next generation of beasts and re-init"""
         _new_beasts = 0
         for beast in self.beasts:
@@ -129,21 +180,21 @@ class Biome:
             beast.r_targ = 0         # orientation to nearest food/shelter (degrees)
             beast.eats = 0           # food eaten this generation
             beast.sheltering = False # Going out into the world again
-        self.populate_beasts(settings, _new_beasts)
+        self.populateBeasts(settings, _new_beasts)
         
         print("IT IS A GOOD DAY TO DIE\n")
         print("Ending Food  : " + str( len(self.foods)) )
         print("Ending beasts : " + str( len(self.beasts)) + "\n")
         print("===========================================================")
     
-    def grow_food(self, settings):
+    def growFood(self, settings):
         """Set food for next generation"""
         self.foods = []
-        self.populate_foods(settings, settings['food_num'])
+        self.populateFoods(settings, settings['food_num'])
     
-    def next_season(self, settings):
-        self.breed_beasts(settings)
-        self.grow_food(settings)
+    def nextSeason(self, settings):
+        self.breedBeasts(settings)
+        self.growFood(settings)
 
 
 class Food():
@@ -228,7 +279,7 @@ class Beast():
             
             if food_dist <= 0.075:
                 self.eats += food.energy
-                biome.consume_food(food)
+                biome.consumeFood(food)
 #                biome.food_left -= 1
             
             elif food_dist < self.d_targ:
@@ -304,127 +355,201 @@ class Plant():
             
         self._rootRatio = 1 - self._stemRatio
         
-        ## ENERGY/NUTRIENT REQUIREMENT CALCULATION
-        # STEM ENERGY
-        def heightEnergyCost(self, settings, _height):
-            return _height*settings['stem_height_cost']
+        # GRAPHICS
+        self.color = (255,50,50)
+    
+    # SCREEN MAPPING FUNCTIONS
+    def ScreenX(self):
+        """Identifies x-position on screen"""
+        return int((self.x + 2)*500/(4) + 10)
+    def ScreenY(self):
+        """Identifies y-position on screen"""
+        return int((self.y + 2)*500/(4) + 10)
+    
+    ## ENERGY/NUTRIENT MAINTAINANCE CALCULATION
+    # STEM ENERGY
+    def heightEnergyCost(self, settings, _height):
+        return _height*settings['stem_height_cost']
+    
+    def widthEnergyCost(self, settings, _width):
+        return (_width**2)*settings['stem_width_cost']
+    
+    def leafEnergyCost(self, settings, _leaves):
+        return (_leaves**1.5)*settings['stem_leaf_cost']
+    
+    def stemEnergyNeed(self, settings, _height = None,
+                       _width = None, _leaves = None):
+        """Energy to maintain the flower/stem"""
+        if _height is None:
+            _height = self.height
+        if _width is None:
+            _width = self.width
+        if _leaves is None:
+            _leaves = self.leaves
         
-        def widthEnergyCost(self, settings, _width):
-            return (_width**2)*settings['stem_width_cost']
+        return self.heightEnergyCost(settings, _height) \
+             * self.widthEnergyCost(settings, _width)   \
+             * self.leafEnergyCost(settings, _leaves)
+    
+    # ROOT ENERGY
+    def rootWidthEnergyCost(self, settings, _width):
+        return (_width**2)*settings['root_width_cost']
+    
+    def rootEnergyCost(self, settings, _rootSize):
+        return (_rootSize**1.5)*settings['root_size_cost']
+    
+    def rootEnergyNeed(self, settings, _width = None,
+                       _rootSize = None):
+        if _width is None:
+            _width = self.rootWidth
+        if _rootSize is None:
+            _rootSize = self.rootSize
         
-        def leafEnergyCost(self, settings, _leaves):
-            return (_leaves**1.5)*settings['stem_leaf_cost']
+        return self.rootWidthEnergyCost(settings, _width) \
+             * self.rootEnergyCost(settings, _rootSize)
+    
+    def energyNeed(self, settings):
+        return ( self.stemEnergyNeed(settings)
+               + self.rootEnergyNeed(settings) )
+    
+    def energyNeedMax(self, settings):
+        return ( self.stemEnergyNeed(settings, self.height_max,
+                                     self.width_max, self.leaves_max)
+               + self.rootEnergyNeed(settings, self.rootWidth_max,
+                                     self.rootSize_max) )
+    
+    # STEM NUTRIENTS
+    def heightNutrientCost(self,settings, _height):
+        return _height*settings['stem_height_nutrient']
+    
+    def widthNutrientCost(self,settings, _width):
+        return (_width**2)*settings['stem_width_nutrient']
+    
+    def leafNutrientCost(self,settings, _leaves):
+        return (_leaves**1.5)*settings['stem_leaf_nutrient']
+    
+    def stemNutrientNeed(self,settings, _height = None,
+                         _width = None, _leaves = None):
+        if _height is None:
+            _height = self.height
+        if _width is None:
+            _width = self.width
+        if _leaves is None:
+            _leaves = self.leaves
         
-        def stemEnergyNeed(self, settings, _height = self.height,
-                           _width = self.width, _leaves = self.leaves):
-            """Energy to maintain the flower/stem"""
-            return heightEnergyCost(settings, _height) \
-                  *widthEnergyCost(settings, _width)   \
-                  *leafEnergyCost(settings, _leaves)
+        return self.heightNutrientCost(settings, _height) \
+             * self.widthNutrientCost(settings, _width)   \
+             * self.leafNutrientCost(settings, _leaves)
         
-        # ROOT ENERGY
-        def rootWidthEnergyCost(self, settings, _width):
-            return (_width**2)*settings['root_width_cost']
+    # ROOT NUTRIENTS
+    def rootWidthNutrientCost(self, settings, _width = None):
+        if _width is None:
+            _width = self.rootWidth
         
-        def rootEnergyCost(self, settings, _rootSize):
-            return (_rootSize**1.5)*settings['root_size_cost']
+        return (_width**2)*settings['root_width_nutrient']
+    
+    def rootNutrientCost(self, settings, _rootSize = None):
+        if _rootSize is None:
+            _rootSize = self.rootSize
         
-        def rootEnergyNeed(self, settings, _width = self.rootWidth,
-                           _rootSize = self.rootSize):
-            return rootWidthEnergyCost(self, settings, _width) \
-                  *rootEnergyCost(self, settings, _rootSize)
+        return (_rootSize**1.5)*settings['root_size_nutrient']
+    
+    def rootNutrientNeed(self, settings, _width = None,
+                         _rootSize = None):
+        if _width is None:
+            _width = self.rootWidth
+        if _rootSize is None:
+            _rootSize = self.rootSize
         
-        def energyNeed(self, settings):
-            return ( self.stemEnergyNeed(settings)
-                   + self.rootEnergyNeed(settings) )
+        return self.rootWidthNutrientCost(self, settings, _width) \
+             * self.rootNutrientCost(self, settings, _rootSize)
+    
+    def nutrientNeed(self, settings):
+        return ( self.stemNutrientNeed(settings)
+               + self.rootNutrientNeed(settings) )
+    
+    def nutrientNeedMax(self, settings):
+        return ( self.stemNutrientNeed(settings, self.height_max,
+                                       self.width_max, self.leaves_max)
+               + self.rootNutrientNeed(settings, self.rootWidth_max,
+                                       self.rootSize_max) )
+    
+    # ABSORBTION METHODS
+    def absorbSunlight(self, settings):
+        available_energy = circ_area(self.width)*settings['sunshine']
         
-        def energyNeedMax(self, settings):
-            return ( self.stemEnergyNeed(settings, self.height_max,
-                                         self.width_max, self.leaves_max)
-                   + self.rootEnergyNeed(settings, self.rootWidth_max,
-                                          self.rootSize_max) )
-        
-        # STEM NUTRIENTS
-        def heightNutrientCost(self,settings, _height):
-            return _height*settings['stem_height_nutrient']
-        
-        def widthNutrientCost(self,settings, _width):
-            return (_width**2)*settings['stem_width_nutrient']
-        
-        def leafNutrientCost(self,settings, _leaves):
-            return (_leaves**1.5)*settings['stem_leaf_nutrient']
-        
-        def stemNutrientNeed(self,settings, _height = self.height,
-                             _width = self.width, _leaves = self.leaves):
-            return heightNutrientCost(settings, _height) \
-                  *widthNutrientCost(settings, _width)   \
-                  *leafNutrientCost(settings, _leaves)
-        
-        # ROOT NUTRIENTS
-        def rootWidthNutrientCost(self, settings, _width = self.rootWidth):
-            return (_width**2)*settings['root_width_nutrient']
-        
-        def rootNutrientCost(self, settings, _rootSize = self.rootSize):
-            return (_rootSize**1.5)*settings['root_size_nutrient']
-        
-        def rootNutrientNeed(self, settings, _width = self.rootWidth,
-                             _rootSize = self.rootSize):
-            return rootWidthNutrientCost(self, settings, _width) \
-                  *rootNutrientCost(self, settings, _rootSize)
-        
-        def nutrientNeed(self, settings):
-            return ( self.stemNutrientNeed(settings)
-                   + self.rootNutrientNeed(settings) )
-        
-        def nutrientNeedMax(self, settings):
-            return ( self.stemNutrientNeed(settings, self.height_max,
-                                         self.width_max, self.leaves_max)
-                   + self.rootNutrientNeed(settings, self.rootWidth_max,
-                                          self.rootSize_max) )
-        
-        # GROWING METHODS
-        def findGrowRate(self):
-            """Balances energy and nutrients for growth"""
-            _growRate = self.energy/(self.energyNeedMax(settings) - self.energyNeed(settings))
+        for rival in self.sunRivals:
+            competition_area = circ_overlap(dist(self.x, self.y, rival.x, rival.y), self.width, rival.width)
+            fractional_area = competition_area/circ_area(self.width)
+            available_energy -= available_energy*fractional_area \
+                              * rival.leaves*settings['absorption']
             
-            _nutrientNeed = _growRate*(self.nutrientNeedMax(settings) - self.nutrientNeed(settings))
-                
-            if _nutrientNeed > self.nutrients:
-                _growRate = _growRate*(self.nutrients/_nutrientNeed)
+        self.energy += available_energy*self.leaves*settings['absorption']
+    
+    def absorbNutrients(self, settings):
+        available_nutrients = circ_area(self.rootWidth) \
+                            * settings['nutrients']
+        rival_root_factor = 0
+        for rival in self.rootRivals:
+            competition_area = circ_overlap(dist(self.x, self.y, rival.x, rival.y), self.rootWidth, rival.rootWidth)
             
-            return _growRate
+            rival_root_factor += competition_area * rival.rootSize
         
-        def growHeight(self, _growRate):
-            self.height += _growRate*(self.height_max - self.height)
+        self.nutrients += available_nutrients*self.rootSize \
+                        / (rival_root_factor + self.rootSize)
+    
+    def maintainance(self, settings):
+        self.energy -= self.energyNeed(settings)
+        self.nutrients -= self.nutrientNeed(settings)
+    
+    # GROWING METHODS
+    def findGrowRate(self, settings):
+        """Balances energy and nutrients for growth"""
+        _growRate = self.energy/(self.energyNeedMax(settings) - self.energyNeed(settings))
         
-        def growWidth(self, _growRate):
-            self.width += _growRate*(self.width_max - self.width)
+        _nutrientNeed = _growRate*(self.nutrientNeedMax(settings) - self.nutrientNeed(settings))
         
-        def growLeaves(self, _growRate):
-            self.leaves += _growRate*(self.leaves_max - self.leaves)
+        if _nutrientNeed > self.nutrients:
+            _growRate = _growRate*(self.nutrients/_nutrientNeed)
         
-        def growStem(self, _growRate):
-            self.growHeight(_growRate)
-            self.growWidth(_growRate)
-            self.growLeaves(_growRate)
-        
-        def growRootWidth(self, _growRate):
-            self.rootWidth += _growRate*(self.rootWidth_max - self.rootWidth)
-        
-        def growRootSize(self, _growRate):
-            self.rootSize += _growRate*(self.rootSize_max - self.rootSize)
-        
-        def growRoot(self, _growRate):
-            self.growRootWidth(_growRate)
-            self.growRootSize(_growRate)
-        
-        def grow(self, settings):
-            # All parameters reach max at same time
-            if self.height < self.height_max :
-                # Energy inefficiency in growth
-                self.energy = self.energy*settings['growth_efficiency']
-                
-                _growRate = self.findGrowRate()
-                
-                self.growStem(_growRate)
-                self.growRoot(_growRate)
+        return _growRate
+    
+    def growHeight(self, _growRate):
+        self.height += _growRate*(self.height_max - self.height)
+    
+    def growWidth(self, _growRate):
+        self.width += _growRate*(self.width_max - self.width)
+    
+    def growLeaves(self, _growRate):
+        self.leaves += _growRate*(self.leaves_max - self.leaves)
+    
+    def growStem(self, _growRate):
+        self.growHeight(_growRate)
+        self.growWidth(_growRate)
+        self.growLeaves(_growRate)
+    
+    def growRootWidth(self, _growRate):
+        self.rootWidth += _growRate*(self.rootWidth_max - self.rootWidth)
+    
+    def growRootSize(self, _growRate):
+        self.rootSize += _growRate*(self.rootSize_max - self.rootSize)
+    
+    def growRoot(self, _growRate):
+        self.growRootWidth(_growRate)
+        self.growRootSize(_growRate)
+    
+    def grow(self, settings):
+        # All parameters reach max at same time
+        if self.height < self.height_max :
+            # Energy inefficiency in growth
+            self.energy = self.energy*settings['growth_efficiency']
+            
+            _growRate = self.findGrowRate(settings)
+            
+            self.growStem(_growRate)
+            self.growRoot(_growRate)
+    
+    # DRAWING
+    def Draw(self, screen):
+        """Draw to screen"""
+        pygame.draw.circle(screen, self.color, (self.ScreenX(), self.ScreenY()), self.width)
