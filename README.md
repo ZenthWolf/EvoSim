@@ -70,3 +70,5 @@ Acknowledgements:
         - Youtube: https://www.youtube.com/channel/UCKzJFdi57J53Vr_BkTfN3uQ
         - No code referenced, but background discussion may inform different versions
         - Less natural starting condition for animals (at boundary) example of inspiration taken
+    
+    - Matplot integration with pygame: http://www.pygame.org/wiki/MatplotlibPygame

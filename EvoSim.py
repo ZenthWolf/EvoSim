@@ -38,7 +38,7 @@ settings ['nutrients'] = 8      # Soil nutrient density
 
 # EVOLUTION SETTINGS
 settings['food_num'] = 5        # number of food particles (for beast sim)
-settings['gens'] = 10
+settings['gens'] = 25
 
 # SIMULATION SETTINGS
 settings['gen_time'] = 10       # generation length         (seconds)
@@ -78,6 +78,7 @@ def run(settings, biome):
     """Beasts seek a set amount of food per generation"""
     #--- CYCLE THROUGH EACH GENERATION --------------------+
     for gen in range(0, settings['gens']):
+        biome.plotBeast()
         
         print("GEN: " + str(gen) + "\n")
         print("Starting Food: " + str( len(biome.foods)) )
@@ -87,17 +88,17 @@ def run(settings, biome):
         print("Startinf plants : " + str( len(biome.plants) ) + "\n")
         print("-----------------------------------------------------------")
         # SIMULATE
-        #biome.simulateBeasts(settings, screen)
-        biome.simulatePlants(settings, screen)
+        biome.simulateBeasts(settings, screen)
+        #biome.simulatePlants(settings, screen)
         
         biome.nextSeason(settings)
-        biome.foods = []
 
 
 #--- Init Screen -------------------------------------------------------------+
 pygame.init()
 screen = pygame.display.set_mode(graphic_settings['screen_size'])
 pygame.display.set_caption(graphic_settings['window_title'])
+
 
 #--- RUN ---------------------------------------------------------------------+
 

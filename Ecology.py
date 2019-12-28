@@ -10,6 +10,14 @@ Simple Evolution Simulator in Python
 
 #--- Depencies ---------------------------------------------------------------+
 
+import matplotlib
+matplotlib.use("Agg")
+
+import matplotlib.backends.backend_agg as agg
+
+
+import pylab
+
 import pygame
 
 
@@ -44,6 +52,11 @@ class Biome:
         
         # COUNTERS
         self.start_food = len(self.foods)
+        
+        # DATA AND PLOTTING
+        self.beastPop = []
+        self.foodPop = []
+        self.plot = None
     
     # MANAGE ECOSYSTEM ENTITIES
     def populateFoods(self, settings, num_foods):
@@ -135,6 +148,8 @@ class Biome:
             beast.Draw(screen)
         for plant in self.plants:
             plant.Draw(screen)
+        
+        screen.blit(self.plot, (550,20))
         pygame.display.update()
     
     
@@ -212,6 +227,28 @@ class Biome:
     def nextSeason(self, settings):
         self.breedBeasts(settings)
         self.growFood(settings)
+    
+    # PLOTTING
+    def plotBeast(self):
+        self.beastPop.append(len(self.beasts))
+        self.foodPop.append(len(self.foods))
+        
+        fig = pylab.figure(figsize=[4, 4], # Inches
+                           dpi=100,        # 100 dots per inch, so the resulting buffer is 400x400 pixels
+                           )
+        ax = fig.gca()
+        bx = fig.gca()
+        ax.plot(self.beastPop)
+        bx.plot(self.foodPop)
+        
+        canvas = agg.FigureCanvasAgg(fig)
+        canvas.draw()
+        renderer = canvas.get_renderer()
+        raw_data = renderer.tostring_rgb()
+        
+        size = canvas.get_width_height()
+
+        self.plot = pygame.image.fromstring(raw_data, size, "RGB")
 
 
 class Food():
