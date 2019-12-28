@@ -9,105 +9,117 @@ Simple Evolution Simulator in Python
 """
 #--- DEPENDANCIES ------------------------------------------------------------+
 
-from Ecology import *
+import pygame
 
-#--- CONSTANTS ---------------------------------------------------------------+
+from Ecology import Biome
+
+#--- Graphics Parameters -----------------------------------------------------+
+graphic_settings = {}
+
+graphic_settings['screen_size'] = (1024, 768)
+graphic_settings['window_title'] = "Ecosim"
+
+#--- Ecology Parameters ------------------------------------------------------+
+
 
 #Put this in text file?
 settings = {}
 
 # FIELD PARAMETERS
-# BORDERS
+# BORDERS (SCREEN COORDS)
 settings['x_min'] = -2.0        # west
 settings['x_max'] =  2.0        # east
-settings['y_min'] = -2.0        # south
-settings['y_max'] =  2.0        # north
+settings['y_min'] = -2.0        # north
+settings['y_max'] =  2.0        # south
 
 # SUN AND SOIL
-settings['sunshine'] = 10       # Sunlight energy density
-settings ['nutrients'] = 10     # Soil nutrient density
+settings['sunshine'] = 10        # Sunlight energy density
+settings ['nutrients'] = 8      # Soil nutrient density
 
 # EVOLUTION SETTINGS
-settings['food_num'] = 50       # number of food particles (for beast sim)
-settings['gens'] = 10           # number of generations
+settings['food_num'] = 5        # number of food particles (for beast sim)
+settings['gens'] = 10
 
 # SIMULATION SETTINGS
-settings['gen_time'] = 30       # generation length         (seconds)
-settings['dt'] = 0.04           # simulation time step      (dt)
+settings['gen_time'] = 10       # generation length         (seconds)
+settings['dt'] = 0.04           # simulation time step      (seconds)
 
 # BEAST PARAMETERS
-settings['init_beasts'] = 1     #starting population
+settings['init_beasts'] = 1
 settings['v_max'] = 0.5         # max velocity              (units per second)
 
-# PLANT PARAMETERS
-settings['absorption'] = 0.85   # Max efficiency of sunlight absoption
-settings['growth_efficiency'] = 0.8 #Growing costs more energy than maintaining
-# Energy Costs
-settings['stem_height_cost'] = 0.5
-settings['stem_width_cost'] = 0.25
-settings['stem_leaf_cost'] = 0.1
 
-settings['root_width_cost'] = 0.25
-settings['root_size_cost'] = 0.1
+# PLANT PARAMETERS
+settings['init_plants'] = 1
+settings['absorption'] = 0.7        # Max efficiency of sunlight absoption
+settings['growth_efficiency'] = 0.7 #Growing costs more energy than maintaining
+settings['init_energy'] = .1
+settings['init_nutrients'] = .1
+# Energy Costs
+settings['stem_height_cost'] = 3.5
+settings['stem_width_cost'] = 1.5
+settings['stem_leaf_cost'] = 0.75
+
+settings['root_width_cost'] = 1.5
+settings['root_size_cost'] = 1
 
 #Nutrient Costs
-settings['stem_height_nutrient'] = 0.5
-settings['stem_width_nutrient'] = 0.25
-settings['stem_leaf_nutrient'] = 0.1
+settings['stem_height_nutrient'] = 3.5
+settings['stem_width_nutrient'] = 1.25
+settings['stem_leaf_nutrient'] = 1
 
-settings['root_width_nutrient'] = 0.1
-settings['root_size_nutrient'] = 0.05 
+settings['root_width_nutrient'] = 1
+settings['root_size_nutrient'] = 0.5
 
 #--- MAIN --------------------------------------------------------------------+
 
 
 def run(settings, biome):
-
-    #--- POPULATE THE ENVIRONMENT WITH FOOD ---------------+
-    foods = []
-    for i in range(0,biome.food_left):
-        foods.append(Food(settings))
-
-    #--- POPULATE THE ENVIRONMENT WITH ORGANISMS ----------+
-    beasts = []
-    for i in range(0,settings['init_beasts']):
-        beasts.append(Beast(settings))
-
+    """Beasts seek a set amount of food per generation"""
     #--- CYCLE THROUGH EACH GENERATION --------------------+
     for gen in range(0, settings['gens']):
         
         print("GEN: " + str(gen) + "\n")
-        print("Starting Food: " + str( len(foods)) )
+        print("Starting Food: " + str( len(biome.foods)) )
         
-        print("Starting beasts : " + str( len(beasts) ) + "\n")
+        print("Starting beasts : " + str( len(biome.beasts)) )
+        
+        print("Startinf plants : " + str( len(biome.plants) ) + "\n")
         print("-----------------------------------------------------------")
         # SIMULATE
-        beasts = simulate_beasts(settings, biome, beasts, foods, gen)
-
-        # EVOLVE
-        beasts = newgen(settings, beasts)
-        print("IT IS A GOOD DAY TO DIE\n")
-
-        print("Ending Food  : " + str( len(foods)) )
+        #biome.simulateBeasts(settings, screen)
+        biome.simulatePlants(settings, screen)
         
-        print("Ending beasts : " + str( len(beasts)) + "\n")
-        
-        print("===========================================================")
-        
-
-        biome = newseason(settings, biome)
-        
-        foods = []
-        for i in range(0,biome.food_left):
-            foods.append(Food(settings))
-            
-
-    pass
+        biome.nextSeason(settings)
+        biome.foods = []
 
 
-#--- RUN ----------------------------------------------------------------------+
+#--- Init Screen -------------------------------------------------------------+
+pygame.init()
+screen = pygame.display.set_mode(graphic_settings['screen_size'])
+pygame.display.set_caption(graphic_settings['window_title'])
+
+#--- RUN ---------------------------------------------------------------------+
 
 biome = Biome(settings);
 run(settings, biome)
 
-#--- END ----------------------------------------------------------------------+
+
+waiting = True
+print("Press enter to end")
+
+#pygame.draw.circle(screen, (255,255,255), (400,300),50,100)
+#pygame.display.update()
+#circle(surface, color, center, radius) -> Rect
+#circle(surface, color, center, radius, width=0) -> Rect
+while waiting:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            waiting = False
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_RETURN:
+                pygame.quit()
+                waiting = False
+
+#--- END ---------------------------------------------------------------------+
