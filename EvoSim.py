@@ -38,7 +38,7 @@ settings ['nutrients'] = 8      # Soil nutrient density
 
 # EVOLUTION SETTINGS
 settings['food_num'] = 5        # number of food particles (for beast sim)
-settings['gens'] = 25
+settings['gens'] = 200
 
 # SIMULATION SETTINGS
 settings['gen_time'] = 10       # generation length         (seconds)
@@ -69,7 +69,11 @@ settings['stem_width_nutrient'] = 1.25
 settings['stem_leaf_nutrient'] = 1
 
 settings['root_width_nutrient'] = 1
-settings['root_size_nutrient'] = 0.5
+settings['root_size_nutrient'] = 0.
+
+# FLAGS
+settings['rand_survival'] = True
+settings['rand_kill'] = True
 
 #--- MAIN --------------------------------------------------------------------+
 

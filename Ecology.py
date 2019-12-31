@@ -89,7 +89,13 @@ class Biome:
             if beast.eats < 2 and len(self.foods) > 0:
                 beast.seek_food(self)
             elif beast.eats == 0 and len(self.foods) == 0:
-                self.killBeast(beast)
+                if settings['rand_survival']:
+                    if randint(0,1) == 1:
+                        beast.eats = 1
+                    else:
+                        self.killBeast(beast)
+                else:
+                    self.killBeast(beast)
             elif not beast.sheltering:
                 beast.seek_shelter(self)
             
@@ -174,6 +180,7 @@ class Biome:
             else:
                 break
         
+        print("Exposure check")
         self.checkBeastExposure()
     
     def simulatePlants(self,settings, screen):
@@ -194,7 +201,11 @@ class Biome:
         for beast in self.beasts:
             if beast.eats >= 2:
                 _new_beasts += 1
+            elif beast.eats == 1 and settings['rand_kill']:
+                if randint(0, 1) == 1:
+                    self.killBeast(beast)
             
+            #This reinit can be a beast method
             beast.d_targ = 100       # distance to nearest food/shelter
             beast.r_targ = 0         # orientation to nearest food/shelter (degrees)
             beast.eats = 0           # food eaten this generation
@@ -213,12 +224,12 @@ class Biome:
     
     def growFood(self, settings):
         """Grows food based on init and final population"""
-        growth_inhabition = self.start_food
+        growth_inhabition = int(self.start_food/2)
         
         seedlings = 0
-        for seed in range(0, 2*self.start_food):
+        for seed in range(0, int(1.25*self.start_food)):
             chance = randint(1,100)
-            if chance >= growth_inhabition or chance == 100:
+            if (chance >= growth_inhabition or chance == 100):
                 seedlings += 1
         
         self.populateFoods(settings, seedlings)
