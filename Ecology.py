@@ -213,8 +213,9 @@ class Biome:
         self.populateBeasts(settings, _new_beasts)
         
         print("IT IS A GOOD DAY TO DIE\n")
-        print("Ending Food  : " + str( len(self.foods)) )
-        print("Ending beasts : " + str( len(self.beasts)) + "\n")
+        print("Ending Food   : " + str( len(self.foods)) )
+        print("Ending beasts : " + str( len(self.beasts)) )
+        print("Ending plants : " + str( len(self.plants)) + "\n")
         print("===========================================================")
     
     def growFoodFlat(self, settings):
@@ -241,17 +242,29 @@ class Biome:
     
     # PLOTTING
     def plotBeast(self):
+        """Plots population of beasts and food"""
+        
         self.beastPop.append(len(self.beasts))
         self.foodPop.append(len(self.foods))
         
-        fig = pylab.figure(figsize=[4, 4], # Inches
+        fig = pylab.figure(figsize=[4.7, 6], # Inches
                            dpi=100,        # 100 dots per inch, so the resulting buffer is 400x400 pixels
-                           )
+                           tight_layout=True,)
+
+        cols = ["#FF9B32","#328032"]
+        pylab.margins(0,0)
+        pylab.subplot(211)
         ax = fig.gca()
-        bx = fig.gca()
-        ax.plot(self.beastPop)
-        bx.plot(self.foodPop)
+        ax.plot(self.beastPop, label="Beasts", color=cols[0])
+        ax.plot(self.foodPop, label="Food", color=cols[1])
+        ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
         
+        pylab.subplot(212)
+        ax = fig.gca()
+        ax.stackplot(range(0,len(self.beastPop)),self.beastPop,self.foodPop, 
+                     labels=["Beasts", "Food"], colors = cols)
+        ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+
         canvas = agg.FigureCanvasAgg(fig)
         canvas.draw()
         renderer = canvas.get_renderer()

@@ -3,25 +3,42 @@ Evolution Simulator written in Python
 
 Current operation:
 
-    1. Biome generates a set amount of food each generation.
+    BEAST SIMULATION
+    1. Biome grows food from previous generations starting population (with crowding factor).
     2. Beasts roam for up to 2 food - seek nearest food
     3. After all food is eaten, or a beast eats 2 food, they return to the border to "shelter"
-    4. Any beast that fails to eat at least 1 food or fails to reach shelter (the border) in time dies.
+    4. Calculate casualties:
+        - Any beast that does not eat, has a 50% chance of gaining 1 food
+        - Any beast with 0 food, dies.
+        - Any beast with 1 food, has a 50% chance to die.
     5. Each beast that eats 2 food adds a new beast to the next generation.
+    
+    PLANT SIMULATION
+    NOTE: Logic not fully implemented
+    1. Each plant absorbs sunlight based on size and overlap of taller competitors
+    2. Each plant absorbs nutrients based on root rize and overlap with competitors
+    3. Each time step, energy is used to survive, then to grow.
+        - Survival costs based on current size
     
     Current output:
     1. Text output of some information
-    2. Inoperoble pygame window for future visualization
+    2. Realtime visualization of beast movement and food placement.
+    3. Realtime visualization of plant size
+    4. Graph representation of population (line chart and stacked area)
+        - Currently only displayed, saving not implemented
     
 Completed tasks:
     - Basic population growth
+    - Simple food growth has a crowding factor
+    - Simple plant growth and competition (no reproduction)
+    - Real time visualization and graphing.
     
 Current priority:
-    - (short term) Graph statistics
     - (short term) Alternative food search? (forced interractions)
-    - (mid term)   Live plotting of generations in development
-    - (mid term)   Allow for more interesting plant populations (food sources)
-    - (long term)  Real time visualization of a generation
+    - (mid term) Basic neural network decision making for beasts
+    - (mid term) Implement plants as food source
+    - (long term) Real time energy budget
+        - Requires different biology, search strategy, or neural network implementation first
     - (long term)  Simulation controls while running
         - print statistics on demand
         - speed up/skip live visualization
@@ -31,9 +48,14 @@ Code goals:
 Various evolution simulation tests (single pop evolution, pred-prey models, etc)
 
 Personal Development goals:
-Using Git with commandline (vs integrated as in Visual Studio)
-Familiarity with Python
-Familiarity with Spyder IDE
+MET Using Git with commandline (vs integrated as in Visual Studio)
+MET Familiarity with Python
+MET Familiarity with Spyder IDE
+
+Implement basic neural network
+Search/pathfinding algorithm implementation
+    - First need to be able to draw/generate natural barriers to movement
+
 
 Specific Development Targets:
 For sim:
@@ -46,13 +68,10 @@ Energy System
     2. Trophic inefficiencies
     3. Seasonal/weather variation on energy usage
 
-Simple Graphics
-   - Need pygame?
+MET Simple Graphics
 
 For self:
-2D Plotting in python
-   - Plotting should be easy, but...
-   - real time anims will require pygame
+MET 2D Plotting in python
    
 3D Plottingg in python
    - These plots are for graphs only, visualization is to be 2D

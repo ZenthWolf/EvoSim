@@ -89,7 +89,7 @@ def run(settings, biome):
         
         print("Starting beasts : " + str( len(biome.beasts)) )
         
-        print("Startinf plants : " + str( len(biome.plants) ) + "\n")
+        print("Starting plants : " + str( len(biome.plants) ) + "\n")
         print("-----------------------------------------------------------")
         # SIMULATE
         biome.simulateBeasts(settings, screen)
